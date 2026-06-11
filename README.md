@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="bots_logo.png" alt="BOSS of the SOC" width="150"/>
+<img src="bots_logo.png" alt="BOSS of the SOC" width="120"/>
 
 # 🕵️ BOSS of the SOC — Docker
 
