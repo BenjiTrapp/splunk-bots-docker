@@ -1,0 +1,9 @@
+services:
+  bots1:
+    image: ghcr.io/benjitrapp/splunk-bots-docker/bots1:latest
+
+  bots2:
+    image: ghcr.io/benjitrapp/splunk-bots-docker/bots2:latest
+
+  bots3:
+    image: ghcr.io/benjitrapp/splunk-bots-docker/bots3:latest

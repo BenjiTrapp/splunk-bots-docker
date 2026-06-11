@@ -1,12 +1,14 @@
 .DEFAULT_GOAL := help
 
 COMPOSE      := docker compose
+COMPOSE_GHCR := docker compose -f docker-compose.yml -f docker-compose.ghcr.yml
 SERVICES     := bots1 bots2 bots3
 BOTS1_PORT   := $(shell grep BOTS1_PORT .env 2>/dev/null | cut -d= -f2)
 BOTS2_PORT   := $(shell grep BOTS2_PORT .env 2>/dev/null | cut -d= -f2)
 BOTS3_PORT   := $(shell grep BOTS3_PORT .env 2>/dev/null | cut -d= -f2)
 
-.PHONY: help install up down start stop restart reset logs ps pull clean
+.PHONY: help install up down start stop restart reset logs ps pull clean \
+        up-ghcr down-ghcr pull-ghcr
 
 help:
 	@echo "Usage: make <target>"
@@ -37,6 +39,11 @@ help:
 	@echo "  logs-1       Follow logs from bots1"
 	@echo "  logs-2       Follow logs from bots2"
 	@echo "  logs-3       Follow logs from bots3"
+	@echo ""
+	@echo "GHCR (pre-built images from GitHub Container Registry)"
+	@echo "  up-ghcr      Start all containers from GHCR"
+	@echo "  down-ghcr    Stop GHCR containers"
+	@echo "  pull-ghcr    Pull the latest GHCR images"
 	@echo ""
 	@echo "Maintenance"
 	@echo "  pull         Pull the Splunk image"
@@ -77,6 +84,17 @@ stop: down
 restart: down up
 
 reset: restart
+
+# ── GHCR (pre-built images) ─────────────────────────────────
+
+up-ghcr:
+	$(COMPOSE_GHCR) up -d
+
+down-ghcr:
+	$(COMPOSE_GHCR) down
+
+pull-ghcr:
+	$(COMPOSE_GHCR) pull
 
 # ── Services ───────────────────────────────────────────────
 
