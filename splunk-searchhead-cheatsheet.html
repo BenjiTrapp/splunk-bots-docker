@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splunk Search Head – Cheatsheet</title>
+<style>
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #141820;
+    --border:    #1e2535;
+    --accent:    #00c7ff;
+    --accent2:   #7c3aed;
+    --green:     #22d3a0;
+    --orange:    #f97316;
+    --red:       #f43f5e;
+    --yellow:    #fbbf24;
+    --text:      #c9d1e0;
+    --muted:     #5a6580;
+    --code-bg:   #0a0c11;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --font-ui:   'Inter', 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 24px 16px 40px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+  header .logo {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  header h1 { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
+  header p  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .badge {
+    margin-left: auto;
+    background: var(--accent2);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 99px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .card.wide { grid-column: 1 / -1; }
+  .card h2 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .card h2 .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .card h2.green  .dot { background: var(--green); }
+  .card h2.orange .dot { background: var(--orange); }
+  .card h2.red    .dot { background: var(--red); }
+  .card h2.yellow .dot { background: var(--yellow); }
+  .card h2.purple .dot { background: var(--accent2); }
+
+  /* ── Code blocks ── */
+  pre, code {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+  .snippet {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    margin-bottom: 8px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.6;
+    position: relative;
+  }
+  .snippet:last-child { margin-bottom: 0; }
+  .snippet .comment { color: var(--muted); }
+  .snippet .kw   { color: var(--accent); }
+  .snippet .cmd  { color: var(--green); }
+  .snippet .val  { color: var(--orange); }
+  .snippet .str  { color: var(--yellow); }
+  .snippet .op   { color: var(--red); }
+  .snippet .idx  { color: var(--accent2); }
+  .label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+    margin-top: 10px;
+  }
+  .label:first-child { margin-top: 0; }
+
+  /* ── Rule table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  th {
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #1a1f2e;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  td code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--accent);
+    font-size: 11px;
+  }
+  td.desc { color: var(--text); line-height: 1.4; }
+
+  /* ── Pipe explainer ── */
+  .pipe-chain {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 4px 0 12px;
+  }
+  .pipe-step {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    flex: 1;
+    min-width: 120px;
+  }
+  .pipe-step .step-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .pipe-arrow {
+    align-self: center;
+    color: var(--accent);
+    font-size: 14px;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── Callout ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: #0d1828;
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  .callout.warn  { border-color: var(--orange); background: #160d05; }
+  .callout.tip   { border-color: var(--green);  background: #061512; }
+  .callout strong { color: #fff; }
+
+  /* ── Index section ── */
+  .index-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .idx-box {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .idx-box .title {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .idx-box code {
+    color: var(--accent2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  footer {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🔍</div>
+  <div>
+    <h1>Splunk Search Head – SPL Tutorial</h1>
+    <p>Search Processing Language · Schritt für Schritt erklärt</p>
+  </div>
+  <span class="badge">CSIRT Edition</span>
+</header>
+
+<!-- ══ TUTORIAL: ERSTE SCHRITTE ══ -->
+<div style="background:linear-gradient(135deg,var(--surface),#0f1420);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px">
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+    <span style="font-size:28px">🎓</span>
+    <div>
+      <div style="font-size:16px;font-weight:700;color:#fff">So funktioniert SPL in 5 Minuten</div>
+      <div style="font-size:12px;color:var(--muted)">Du liest eine Query <strong style="color:var(--accent)">immer von links nach rechts</strong> – jeder Schritt verarbeitet das Ergebnis des vorherigen.</div>
+    </div>
+  </div>
+
+  <!-- Step 1 -->
+  <div style="display:flex;gap:14px;margin-bottom:14px;align-items:flex-start">
+    <div style="background:var(--accent2);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">1</div>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Die Suchleiste</div>
+      <div style="font-size:12px;color:var(--text);margin-bottom:6px">Oben im Splunk-UI gibst du deine Query ein. Was vor der ersten <code style="color:var(--accent)">|</code> (Pipe) steht, ist die <strong style="color:#fff">Basis-Suche</strong> – hier bestimmst du, <em>welche</em> Daten durchsucht werden.</div>
+      <div class="snippet" style="margin-bottom:0"><span class="idx">index=</span><span class="val">windows</span> EventCode=<span class="val">4625</span> earliest=<span class="val">-7d</span></div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div style="display:flex;gap:14px;margin-bottom:14px;align-items:flex-start">
+    <div style="background:var(--green);color:#000;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">2</div>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Basis-Suche: Index + Filter</div>
+      <div style="font-size:12px;color:var(--text);margin-bottom:6px">Jede Query beginnt mit Index, Zeitraum und Feld-Filtern. Das ist die <strong style="color:#fff">schnellste</strong> Methode, Daten einzugrenzen.</div>
+      <table style="font-size:11.5px">
+        <tr><th style="padding:3px 6px">Element</th><th style="padding:3px 6px">Beispiel</th><th style="padding:3px 6px">Erklärung</th></tr>
+        <tr><td style="padding:3px 6px"><code style="color:var(--accent2)">index</code></td><td style="padding:3px 6px"><code>index=windows</code></td><td style="padding:3px 6px;color:var(--text)">Welche Datenquelle?</td></tr>
+        <tr><td style="padding:3px 6px"><code style="color:var(--green)">sourcetype</code></td><td style="padding:3px 6px"><code>sourcetype=WinEventLog:Security</code></td><td style="padding:3px 6px;color:var(--text)">Welcher Log-Typ?</td></tr>
+        <tr><td style="padding:3px 6px"><code style="color:var(--orange)">earliest/latest</code></td><td style="padding:3px 6px"><code>earliest=-24h</code></td><td style="padding:3px 6px;color:var(--text)">Welcher Zeitraum?</td></tr>
+        <tr><td style="padding:3px 6px"><code>Feldfilter</code></td><td style="padding:3px 6px"><code>status=500</code></td><td style="padding:3px 6px;color:var(--text)">Welche Werte?</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div style="display:flex;gap:14px;margin-bottom:14px;align-items:flex-start">
+    <div style="background:var(--orange);color:#000;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">3</div>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Der Pipe-Operator <code style="color:var(--accent)">|</code></div>
+      <div style="font-size:12px;color:var(--text);margin-bottom:6px">Hinter der Basis-Suche kommen <strong style="color:#fff">Pipes</strong>. Jede <code style="color:var(--accent)">|</code> leitet das Ergebnis an den nächsten Befehl weiter – wie in der Unix-Kommandozeile.</div>
+      <div class="snippet" style="margin-bottom:0"><span class="comment">-- So denkst du eine Query: --</span>
+<span class="comment">   "Nimm alle Windows-Logons (4624)"</span>
+<span class="op">|</span> <span class="comment">"zähle sie pro User"</span>
+<span class="op">|</span> <span class="comment">"zeige nur User mit mehr als 10 Logons"</span>
+<span class="op">|</span> <span class="comment">"sortiere absteigend"</span></div>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div style="display:flex;gap:14px;margin-bottom:0;align-items:flex-start">
+    <div style="background:var(--accent);color:#000;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">4</div>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Deine erste Query – von Rohdaten zur Erkenntnis</div>
+      <div style="font-size:12px;color:var(--text);margin-bottom:8px">Das Ziel ist immer: <strong style="color:#fff">Rohdaten → gefiltert → aggregiert → beantwortet</strong>. Hier der klassische Aufbau:</div>
+
+      <div class="pipe-chain" style="margin-bottom:8px">
+        <div class="pipe-step">
+          <div class="step-label">① Datenquelle</div>
+          <span style="color:var(--accent2)">index=</span><span style="color:var(--orange)">windows</span>
+        </div>
+        <div class="pipe-arrow">|</div>
+        <div class="pipe-step">
+          <div class="step-label">② Filtern</div>
+          <span style="color:var(--green)">search</span> EventCode=<span style="color:var(--yellow)">4625</span>
+        </div>
+        <div class="pipe-arrow">|</div>
+        <div class="pipe-step">
+          <div class="step-label">③ Aggregieren</div>
+          <span style="color:var(--green)">stats</span> count by src_ip
+        </div>
+        <div class="pipe-arrow">|</div>
+        <div class="pipe-step">
+          <div class="step-label">④ Entscheiden</div>
+          <span style="color:var(--green)">where</span> count &gt; <span style="color:var(--yellow)">10</span>
+        </div>
+      </div>
+
+      <div class="snippet" style="margin-bottom:0"><span class="idx">index=</span><span class="val">windows</span> EventCode=<span class="val">4625</span>
+<span class="op">|</span> <span class="cmd">stats</span> count by src_ip, Account_Name
+<span class="op">|</span> <span class="cmd">where</span> count &gt; <span class="val">10</span>
+<span class="op">|</span> <span class="cmd">sort</span> -count
+<span class="op">|</span> <span class="cmd">table</span> src_ip, Account_Name, count</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="grid">
+
+  <!-- ══ BASIS-SUCHE & PIPE ══ -->
+  <div class="card">
+    <h2 class="green"><span class="dot"></span>Die Basis-Suche &amp; das Pipe <code style="color:var(--accent); font-size:14px">|</code></h2>
+    <div class="callout tip">
+      <strong>Merke:</strong> Alles <em>vor</em> der ersten Pipe ist die Basis-Suche. Danach kommt <code style="color:var(--accent)">|</code> + Befehl. Wie Unix-Pipes.
+    </div>
+    <div class="label">Nur Basis-Suche (Rohdaten)</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">firewall</span> <span class="kw">action=</span><span class="str">blocked</span></div>
+
+    <div class="label">Basis-Suche + eine Pipe</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">firewall</span> <span class="kw">action=</span><span class="str">blocked</span>
+<span class="op">|</span> <span class="cmd">stats</span> count by src_ip</div>
+
+    <div class="label">Verkettete Pipes</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">firewall</span> <span class="kw">action=</span><span class="str">blocked</span>
+<span class="op">|</span> <span class="cmd">stats</span> count by src_ip
+<span class="op">|</span> <span class="cmd">sort</span> -count
+<span class="op">|</span> <span class="cmd">head</span> <span class="val">10</span></div>
+
+    <div class="callout warn" style="margin-top:10px">
+      <strong>Tipp:</strong> Filtere so früh wie möglich in der Pipe-Kette → weniger Events zu verarbeiten = schneller.
+    </div>
+  </div>
+
+  <!-- ══ IMPLIZITES UND ══ -->
+  <div class="card">
+    <h2 class="orange"><span class="dot"></span>Implizites AND zwischen Termen</h2>
+    <div class="callout">
+      Mehrere Begriffe ohne Operator werden mit <strong>AND</strong> verknüpft. Splunk fügt das AND implizit ein.
+    </div>
+
+    <div class="label">Diese Queries sind äquivalent</div>
+    <div class="snippet"><span class="comment">-- implizites AND --</span>
+<span class="idx">index=</span><span class="val">windows</span> EventCode=<span class="val">4625</span> User=admin</div>
+    <div class="snippet"><span class="comment">-- explizites AND --</span>
+<span class="idx">index=</span><span class="val">windows</span> EventCode=<span class="val">4625</span> <span class="kw">AND</span> User=admin</div>
+
+    <div class="label">Logische Operatoren</div>
+    <table>
+      <tr><th>Operator</th><th>Beispiel</th><th>Bedeutung</th></tr>
+      <tr><td><code>AND</code></td><td><code>error AND timeout</code></td><td class="desc">Beide müssen vorkommen</td></tr>
+      <tr><td><code>OR</code></td><td><code>error OR warning</code></td><td class="desc">Eines muss vorkommen</td></tr>
+      <tr><td><code>NOT</code></td><td><code>NOT error</code></td><td class="desc">Darf nicht vorkommen</td></tr>
+      <tr><td><code>( )</code></td><td><code>(A OR B) AND C</code></td><td class="desc">Gruppierung / Vorrang</td></tr>
+    </table>
+
+    <div class="label">Beispiel mit Gruppierung</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">auth</span> (<span class="str">failed</span> <span class="kw">OR</span> <span class="str">error</span>) <span class="kw">AND</span> <span class="kw">NOT</span> src_ip=<span class="val">10.0.0.1</span></div>
+  </div>
+
+  <!-- ══ INDEX ══ -->
+  <div class="card">
+    <h2 class="purple"><span class="dot"></span>Index – Datenquelle bestimmen</h2>
+    <div class="callout">
+      Der <strong>Index</strong> ist der primäre Filter. Ohne <code>index=</code> durchsucht Splunk <em>alle</em> Indizes, auf die du Zugriff hast — teuer!
+    </div>
+
+    <div class="label">Syntax-Varianten</div>
+    <div class="snippet"><span class="comment">-- Einzelner Index --</span>
+<span class="idx">index=</span><span class="val">windows</span>
+
+<span class="comment">-- Mehrere Indizes (OR-Logik) --</span>
+<span class="idx">index=</span><span class="val">windows</span> <span class="kw">OR</span> <span class="idx">index=</span><span class="val">linux</span>
+
+<span class="comment">-- Wildcard --</span>
+<span class="idx">index=</span><span class="val">prod_*</span>
+
+<span class="comment">-- Alle Indizes (vermeiden!) --</span>
+<span class="idx">index=</span><span class="val">*</span></div>
+
+    <div class="label">Typische CSIRT-Indizes</div>
+    <div class="index-grid">
+      <div class="idx-box"><div class="title">Windows</div><code>index=windows</code></div>
+      <div class="idx-box"><div class="title">Firewall / NSM</div><code>index=network</code></div>
+      <div class="idx-box"><div class="title">EDR / Endpoint</div><code>index=edr</code></div>
+      <div class="idx-box"><div class="title">Auth / AD</div><code>index=auth</code></div>
+    </div>
+
+    <div class="label" style="margin-top:10px">Index + Sourcetype kombinieren</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">windows</span> <span class="kw">sourcetype=</span><span class="str">WinEventLog:Security</span>
+<span class="idx">index=</span><span class="val">network</span> <span class="kw">sourcetype=</span><span class="str">cisco:asa</span></div>
+  </div>
+
+  <!-- ══ ZEITRAUM ══ -->
+  <div class="card">
+    <h2 class="yellow"><span class="dot"></span>Zeitraum &amp; Time Handling</h2>
+    <div class="snippet"><span class="comment">-- Relativ (empfohlen) --</span>
+<span class="idx">index=</span><span class="val">windows</span> earliest=<span class="val">-24h</span> latest=<span class="val">now</span>
+<span class="idx">index=</span><span class="val">windows</span> earliest=<span class="val">-7d@d</span> latest=<span class="val">@d</span>
+
+<span class="comment">-- Absolut (ISO) --</span>
+<span class="idx">index=</span><span class="val">windows</span>
+  earliest=<span class="str">"2025-06-01T00:00:00"</span>
+  latest=<span class="str">"2025-06-11T23:59:59"</span></span></div>
+
+    <table>
+      <tr><th>Kürzel</th><th>Bedeutung</th></tr>
+      <tr><td><code>-1h</code></td><td class="desc">Letzte Stunde</td></tr>
+      <tr><td><code>-24h</code></td><td class="desc">Letzte 24 Stunden</td></tr>
+      <tr><td><code>-7d@d</code></td><td class="desc">7 Tage, auf Tagesbeginn gerundet</td></tr>
+      <tr><td><code>@w0</code></td><td class="desc">Anfang dieser Woche (Sonntag)</td></tr>
+      <tr><td><code>@mon</code></td><td class="desc">Anfang dieses Monats</td></tr>
+    </table>
+
+    <div class="label">Zeitkonvertierung in der Pipeline</div>
+    <div class="snippet"><span class="comment">-- Unix-Timestamp → lesbares Datum --</span>
+<span class="op">|</span> <span class="cmd">eval</span> human = strftime(_time, <span class="str">"%Y-%m-%d %H:%M:%S %Z"</span>)
+
+<span class="comment">-- Datum-String → Unix-Timestamp --</span>
+<span class="op">|</span> <span class="cmd">eval</span> ts = strptime(date, <span class="str">"%d/%b/%Y:%H:%M:%S"</span>)
+
+<span class="comment">-- Zeitdifferenz berechnen --</span>
+<span class="op">|</span> <span class="cmd">eval</span> minuten = round((end-start)/<span class="val">60</span>, <span class="val">2</span>)
+
+<span class="comment">-- Zeitgruppierung für Trends --</span>
+<span class="op">|</span> <span class="cmd">bin</span> _time span=<span class="val">5m</span>
+<span class="op">|</span> <span class="cmd">stats</span> count by _time</div>
+  </div>
+
+  <!-- ══ WICHTIGE BEFEHLE ══ -->
+  <div class="card">
+    <h2><span class="dot"></span>Wichtige SPL-Befehle</h2>
+    <table>
+      <tr><th>Befehl</th><th>Beschreibung</th><th>Beispiel</th></tr>
+      <tr><td><code>stats</code></td><td class="desc">Aggregation: count, sum, avg, dc, values</td><td><code>stats count by host</code></td></tr>
+      <tr><td><code>table</code></td><td class="desc">Felder als Tabelle ausgeben</td><td><code>table _time, host, status</code></td></tr>
+      <tr><td><code>fields</code></td><td class="desc">Felder ein-/ausschließen</td><td><code>fields + host, status</code></td></tr>
+      <tr><td><code>where</code></td><td class="desc">Filtert nach Ausdruck auf Feldern</td><td><code>where len(user) > 3</code></td></tr>
+      <tr><td><code>search</code></td><td class="desc">Volltext-Filter in der Pipeline</td><td><code>search status=500</code></td></tr>
+      <tr><td><code>eval</code></td><td class="desc">Neue Felder berechnen / transformieren</td><td><code>eval gb=bytes/1GB</code></td></tr>
+      <tr><td><code>rex</code></td><td class="desc">Regex-Extraktion auf Felder</td><td><code>rex "user=(?&lt;u&gt;\w+)"</code></td></tr>
+      <tr><td><code>dedup</code></td><td class="desc">Duplikate entfernen</td><td><code>dedup src_ip</code></td></tr>
+      <tr><td><code>sort</code></td><td class="desc">Sortieren (<code>-</code> = absteigend)</td><td><code>sort -count, +host</code></td></tr>
+      <tr><td><code>head</code>/<code>tail</code></td><td class="desc">Erste / letzte N Ergebnisse</td><td><code>head limit=20</code></td></tr>
+      <tr><td><code>rename</code></td><td class="desc">Felder umbenennen</td><td><code>rename data.user as user</code></td></tr>
+      <tr><td><code>top</code>/<code>rare</code></td><td class="desc">Häufigste / seltenste Werte</td><td><code>top limit=10 useragent</code></td></tr>
+      <tr><td><code>timechart</code></td><td class="desc">Zeitbasierte Aggregation für Charts</td><td><code>timechart count by status</code></td></tr>
+      <tr><td><code>chart</code></td><td class="desc">Statistik-Tabelle mit Split</td><td><code>chart avg(cpu) over host</code></td></tr>
+      <tr><td><code>lookup</code></td><td class="desc">Externe Tabelle joinen (IOC)</td><td><code>lookup ioc.csv ip OUTPUT cat</code></td></tr>
+      <tr><td><code>transaction</code></td><td class="desc">Events zu Sessions gruppieren</td><td><code>transaction session maxspan=30m</code></td></tr>
+      <tr><td><code>eventstats</code></td><td class="desc">Statistiken als Felder hinzufügen</td><td><code>eventstats avg(rt) by host</code></td></tr>
+      <tr><td><code>streamstats</code></td><td class="desc">Laufende Summen / Kumulativ</td><td><code>streamstats sum(bytes) as total</code></td></tr>
+      <tr><td><code>bin</code></td><td class="desc">Werte in Buckets gruppieren</td><td><code>bin _time span=5m</code></td></tr>
+      <tr><td><code>tstats</code></td><td class="desc">High-Perf. auf indizierten Feldern</td><td><code>tstats count where index=web</code></td></tr>
+      <tr><td><code>appendpipe</code></td><td class="desc">Summenzeile ans Ergebnis anhängen</td><td><code>appendpipe [stats sum(count)]</code></td></tr>
+      <tr><td><code>fillnull</code></td><td class="desc">Null-Werte ersetzen</td><td><code>fillnull value="N/A"</code></td></tr>
+      <tr><td><code>mvexpand</code></td><td class="desc">Multivalue in Einzel-Events</td><td><code>mvexpand recipients</code></td></tr>
+      <tr><td><code>inputlookup</code></td><td class="desc">CSV als Datenquelle laden</td><td><code>inputlookup employees.csv</code></td></tr>
+      <tr><td><code>outputlookup</code></td><td class="desc">Ergebnisse in CSV schreiben</td><td><code>outputlookup results.csv</code></td></tr>
+    </table>
+  </div>
+
+  <!-- ══ PRAXIS-QUERIES ══ -->
+  <div class="card wide">
+    <h2 class="red"><span class="dot"></span>Praxis-Queries (CSIRT)</h2>
+    <div class="label">Brute-Force Logins erkennen</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">windows</span> <span class="kw">sourcetype=</span><span class="str">WinEventLog:Security</span> EventCode=<span class="val">4625</span>
+<span class="op">|</span> <span class="cmd">stats</span> count by src_ip, Account_Name
+<span class="op">|</span> <span class="cmd">where</span> count &gt; <span class="val">10</span>
+<span class="op">|</span> <span class="cmd">sort</span> -count</div>
+
+    <div class="label">PowerShell Execution mit Encoded Command</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">edr</span> process_name=<span class="str">"powershell.exe"</span> CommandLine=<span class="str">*-EncodedCommand*</span>
+<span class="op">|</span> <span class="cmd">table</span> _time, host, user, CommandLine
+<span class="op">|</span> <span class="cmd">sort</span> -_time</div>
+
+    <div class="label">Lateral Movement via Remote Services (4648)</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">windows</span> EventCode=<span class="val">4648</span> earliest=<span class="val">-1h</span>
+<span class="op">|</span> <span class="cmd">eval</span> pair=src_user.<span class="str">" → "</span>.dest_host
+<span class="op">|</span> <span class="cmd">stats</span> count values(pair) as targets by src_host
+<span class="op">|</span> <span class="cmd">where</span> count &gt; <span class="val">3</span></div>
+
+    <div class="label">IOC-Lookup gegen Threat Intel Liste</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">network</span> <span class="kw">sourcetype=</span><span class="str">firewall</span>
+<span class="op">|</span> <span class="cmd">lookup</span> malicious_ips.csv dest_ip OUTPUT threat_category
+<span class="op">|</span> <span class="cmd">where</span> isnotnull(threat_category)
+<span class="op">|</span> <span class="cmd">table</span> _time, src_ip, dest_ip, threat_category</div>
+
+    <div class="label">Neues Gerät im Netz (first seen)</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">network</span> earliest=<span class="val">-30d</span>
+<span class="op">|</span> <span class="cmd">stats</span> min(_time) as first_seen by src_mac, src_ip
+<span class="op">|</span> <span class="cmd">where</span> first_seen &gt; relative_time(now(), <span class="str">"-24h"</span>)
+<span class="op">|</span> <span class="cmd">convert</span> ctime(first_seen)</div>
+  </div>
+
+  <!-- ══ WILDCARDS & FELDER ══ -->
+  <div class="card">
+    <h2><span class="dot"></span>Wildcards &amp; Feldsuche</h2>
+    <div class="snippet"><span class="comment">-- Wildcard am Ende (effizient) --</span>
+<span class="kw">process_name=</span><span class="str">powershell*</span>
+
+<span class="comment">-- Wildcard in der Mitte (teurer) --</span>
+<span class="kw">CommandLine=</span><span class="str">*mimikatz*</span>
+
+<span class="comment">-- Feld existiert / ist befüllt --</span>
+<span class="kw">src_ip=</span><span class="val">*</span>
+
+<span class="comment">-- Feld nicht vorhanden --</span>
+<span class="kw">NOT</span> error_code=<span class="val">*</span></div>
+
+    <div class="callout warn">
+      <strong>Performance:</strong> Wildcards am Anfang (<code>*xyz</code>) erzwingen einen Full-Scan. Wenn möglich vermeiden oder mit Index-Filterung kombinieren.
+    </div>
+  </div>
+
+  <!-- ══ EVAL ══ -->
+  <div class="card">
+    <h2 class="green"><span class="dot"></span>eval – Felder berechnen</h2>
+    <div class="snippet"><span class="comment">-- String-Konkatenation --</span>
+<span class="op">|</span> <span class="cmd">eval</span> asset=host.<span class="str">":"</span>.src_ip
+
+<span class="comment">-- Bedingte Logik --</span>
+<span class="op">|</span> <span class="cmd">eval</span> severity=<span class="cmd">if</span>(count&gt;<span class="val">100</span>, <span class="str">"HIGH"</span>, <span class="str">"LOW"</span>)
+
+<span class="comment">-- case()-Ausdruck (sauberer als verschachteltes if) --</span>
+<span class="op">|</span> <span class="cmd">eval</span> risk=<span class="cmd">case</span>(
+    score&gt;<span class="val">80</span>, <span class="str">"Critical"</span>,
+    score&gt;<span class="val">50</span>, <span class="str">"Medium"</span>,
+    <span class="val">1==1</span>,     <span class="str">"Low"</span>
+  )
+
+<span class="comment">-- Coalesce – ersten nicht-null Wert zurückgeben --</span>
+<span class="op">|</span> <span class="cmd">eval</span> user=coalesce(username, email, <span class="str">"anonymous"</span>)
+
+<span class="comment">-- Unix-Zeit zu lesbarem Datum --</span>
+<span class="op">|</span> <span class="cmd">eval</span> human_time=strftime(_time, <span class="str">"%Y-%m-%d %H:%M:%S"</span>)
+
+<span class="comment">-- Datum-String zu Unix-Timestamp --</span>
+<span class="op">|</span> <span class="cmd">eval</span> epoch=strptime(date_field, <span class="str">"%d/%b/%Y:%H:%M:%S"</span>)
+
+<span class="comment">-- Math: Bytes in GB --</span>
+<span class="op">|</span> <span class="cmd">eval</span> gb=bytes/1024/1024/1024
+
+<span class="comment">-- Standardabweichung für Ausreisser --</span>
+<span class="op">|</span> <span class="cmd">eventstats</span> avg(rt) as avg_rt, stdev(rt) as stdev_rt
+<span class="op">|</span> <span class="cmd">where</span> rt &gt; (avg_rt + <span class="val">2</span>*stdev_rt)</div>
+  </div>
+
+  <!-- ══ STRING-OPERATIONEN ══ -->
+  <div class="card">
+    <h2 class="yellow"><span class="dot"></span>String-Operationen</h2>
+
+    <div class="label">Konkatenation</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">eval</span> full_name = first_name . <span class="str">" "</span> . last_name</div>
+
+    <div class="label">Substring</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">eval</span> short = substr(word, <span class="val">1</span>, <span class="val">3</span>)</div>
+
+    <div class="label">Regex Replacement (rex mode=sed)</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">rex</span> mode=sed field=msg <span class="str">"s/\s+/ /g"</span>
+<span class="op">|</span> <span class="cmd">rex</span> mode=sed field=email <span class="str">"s/@/ [at] /"</span></div>
+
+    <div class="label">replace – einfache Ersetzung</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">replace</span> <span class="str">"localhost"</span> <span class="cmd">with</span> <span class="str">"127.0.0.1"</span> in host</div>
+
+    <div class="label">Whitespace ignorieren beim Match</div>
+    <div class="snippet"><span class="comment">-- Erst extrahieren, dann vergleichen --</span>
+<span class="op">|</span> <span class="cmd">rex</span> field=MessageStatus <span class="str">"(?&lt;status&gt;\w+)"</span>
+<span class="op">|</span> <span class="cmd">eval</span> ok=<span class="cmd">if</span>(status=<span class="str">"delivered"</span>, <span class="str">"yes"</span>, <span class="str">"no"</span>)</div>
+
+    <div class="label">Multivalue-Felder</div>
+    <div class="snippet"><span class="comment">-- In einzelne Events aufsplitten --</span>
+<span class="op">|</span> <span class="cmd">mvexpand</span> recipients
+
+<span class="comment">-- Bestimmten Index aus Multivalue --</span>
+<span class="op">|</span> <span class="cmd">eval</span> first = mvindex(items, <span class="val">0</span>)
+
+<span class="comment">-- Mit Trennzeichen joinen --</span>
+<span class="op">|</span> <span class="cmd">eval</span> userlist = mvjoin(users, <span class="str">", "</span>)
+
+<span class="comment">-- Multivalue-Felder filtern --</span>
+<span class="op">|</span> <span class="cmd">eval</span> errors = mvfilter(match(msgs, <span class="str">"ERROR"</span>))</div>
+  </div>
+
+  <!-- ══ FILTERUNG ══ -->
+  <div class="card">
+    <h2 class="orange"><span class="dot"></span>Filterung: where vs search</h2>
+
+    <div class="label">where – Ausdrücke &amp; Funktionen</div>
+    <div class="snippet"><span class="comment">-- Feldnamen OHNE Anführungszeichen, KEINE Wildcards --</span>
+<span class="op">|</span> <span class="cmd">where</span> isnotnull(user) <span class="kw">AND</span> len(user) &gt; <span class="val">3</span>
+<span class="op">|</span> <span class="cmd">where</span> like(url, <span class="str">"%/api/%"</span>)</div>
+
+    <div class="label">search – Keyword-Matching mit Wildcards</div>
+    <div class="snippet"><span class="comment">-- Strings werden als Literale behandelt, Wildcards erlaubt --</span>
+<span class="op">|</span> <span class="cmd">search</span> user=admin* status!=404</div>
+
+    <div class="label">NOT vs != (wichtiger Unterschied!)</div>
+    <div class="snippet"><span class="comment">-- != schliesst NULL/leere Felder NICHT aus --</span>
+<span class="comment">-- NOT schliesst auch leere Felder aus --</span>
+status!=<span class="val">500</span>   <span class="comment">-- 500er werden gefiltert, NULL bleibt drin</span>
+<span class="kw">NOT</span> status=<span class="val">500</span> <span class="comment">-- auch Events OHNE status-Feld werden gefiltert</span></div>
+
+    <div class="callout warn">
+      <strong>Merke:</strong> <code style="color:var(--red)">!=</code> filtert nur explizite Werte. Mit <code style="color:var(--accent)">NOT</code> werden auch Events ohne das Feld ausgeschlossen. Für "alles außer X mit Feld" nimm <code>!=</code>; für "garantiert keine X" nimm <code>NOT</code>.
+    </div>
+  </div>
+
+  <!-- ══ ANALYSE ══ -->
+  <div class="card">
+    <h2 class="purple"><span class="dot"></span>Analyse: Perzentile &amp; Ausreisser</h2>
+
+    <div class="label">Perzentile</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">web</span>
+<span class="op">|</span> <span class="cmd">stats</span> avg(rt) as avg_rt,
+        median(rt) as p50_rt,
+        perc95(rt) as p95_rt,
+        perc99(rt) as p99_rt
+        by endpoint</div>
+
+    <div class="label">Ausreisser mit Standardabweichung</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">web</span>
+<span class="op">|</span> <span class="cmd">eventstats</span> avg(rt) as avg_rt, stdev(rt) as stdev_rt
+<span class="op">|</span> <span class="cmd">where</span> rt &gt; (avg_rt + <span class="val">2</span>*stdev_rt)</div>
+
+    <div class="label">Statistische Verteilung</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">stats</span> count, dc(src_ip) as unique_visitors,
+        values(useragent) as ua_list by endpoint</div>
+  </div>
+
+  <!-- ══ LOOKUP ══ -->
+  <div class="card">
+    <h2 class="green"><span class="dot"></span>Lookup-Tabellen</h2>
+
+    <div class="label">CSV-Lookup zur Anreicherung</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">network</span>
+<span class="op">|</span> <span class="cmd">lookup</span> threat_intel.csv ip as src_ip
+    OUTPUT threat_level, category</div>
+
+    <div class="label">Lookup als Datenquelle nutzen</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">inputlookup</span> employees.csv
+<span class="op">|</span> <span class="cmd">search</span> department=<span class="str">"IT"</span></div>
+
+    <div class="label">Ergebnisse in Lookup schreiben</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">web</span> status=<span class="val">500</span>
+<span class="op">|</span> <span class="cmd">stats</span> count by src_ip
+<span class="op">|</span> <span class="cmd">where</span> count &gt; <span class="val">100</span>
+<span class="op">|</span> <span class="cmd">outputlookup</span> suspicious_ips.csv</div>
+
+    <div class="callout tip">
+      <strong>Use Case:</strong> IOC-Liste als CSV anlegen und per <code>lookup</code> gegen Firewall-Logs joinen → sofortige Trefferanzeige.
+    </div>
+  </div>
+
+  <!-- ══ TRANSACTION ══ -->
+  <div class="card">
+    <h2 class="red"><span class="dot"></span>Transaktionen</h2>
+
+    <div class="label">Session Grouping (teuer)</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">web</span>
+<span class="op">|</span> <span class="cmd">transaction</span> session_id maxspan=<span class="val">30m</span> maxpause=<span class="val">5m</span>
+<span class="op">|</span> <span class="cmd">where</span> duration &gt; <span class="val">60</span>
+<span class="op">|</span> <span class="cmd">table</span> session_id, duration, eventcount</div>
+
+    <div class="label">Alternative mit stats (schneller)</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">stats</span> min(_time) as start, max(_time) as end,
+        count as events by session_id
+<span class="op">|</span> <span class="cmd">eval</span> duration = end - start
+<span class="op">|</span> <span class="cmd">where</span> duration &gt; <span class="val">60</span></div>
+
+    <div class="callout warn">
+      <strong>Performance:</strong> <code style="color:var(--orange)">transaction</code> ist ressourcenintensiv. Nutze <code style="color:var(--green)">stats</code> + <code>min(_time)</code> / <code>max(_time)</code> wenn möglich.
+    </div>
+  </div>
+
+  <!-- ══ MEHRERE QUERIES ══ -->
+  <div class="card">
+    <h2 class="purple"><span class="dot"></span>Mehrere Queries kombinieren</h2>
+
+    <div class="label">Subsearch</div>
+    <div class="snippet"><span class="comment">-- Ergebnisse einer Suche als Input für die Hauptsuche --</span>
+<span class="idx">index=</span><span class="val">web</span> user=<span class="op">[</span><span class="cmd">search</span> <span class="idx">index=</span><span class="val">vpn</span>
+<span class="op">|</span> <span class="cmd">dedup</span> user <span class="op">|</span> <span class="cmd">fields</span> user<span class="op">]</span>
+<span class="op">|</span> <span class="cmd">stats</span> count by user</div>
+
+    <div class="label">Join</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">main</span>
+<span class="op">|</span> <span class="cmd">join</span> type=left user <span class="op">[</span>
+    <span class="cmd">search</span> <span class="idx">index=</span><span class="val">hr</span>
+<span class="op">|</span> <span class="cmd">stats</span> count by user
+  <span class="op">]</span></div>
+
+    <div class="label">Append</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">web</span> status=<span class="val">500</span>
+<span class="op">|</span> <span class="cmd">stats</span> count as errors by host
+<span class="op">|</span> <span class="cmd">append</span> <span class="op">[</span>
+    <span class="cmd">search</span> <span class="idx">index=</span><span class="val">web</span> status=<span class="val">200</span>
+  <span class="op">|</span> <span class="cmd">stats</span> count as success by host
+  <span class="op">]</span></div>
+
+    <div class="callout tip">
+      <strong>Tipp:</strong> Subsearch-Ergebnisse werden auf 10.000 Events begrenzt (einstellbar mit <code>format</code>). Subsearch immer in eckige Klammern <code style="font-weight:700">[ ]</code> setzen!
+    </div>
+  </div>
+
+  <!-- ══ PERFORMANCE ══ -->
+  <div class="card">
+    <h2 class="yellow"><span class="dot"></span>Performance-Tipps</h2>
+
+    <div class="snippet"><span class="comment">-- ① Früh filtern: Index + Sourcetype zuerst --</span>
+<span class="idx">index=</span><span class="val">web</span> sourcetype=<span class="str">"access_log"</span> status=<span class="val">500</span>
+<span class="comment">   statt: index=* | search sourcetype="access_log"</span>
+
+<span class="comment">-- ② Keine Wildcards am Anfang --</span>
+<span class="comment">   *error  ✗  (Full-Scan)</span>
+<span class="comment">   error*  ✓  (Index-gefiltert)</span>
+
+<span class="comment">-- ③ fields-Kommando nutzen --</span>
+<span class="op">|</span> <span class="cmd">fields</span> host, status, response_time
+<span class="op">|</span> <span class="cmd">stats</span> avg(response_time) by host
+
+<span class="comment">-- ④ tstats für indizierte Felder (schneller) --</span>
+<span class="op">|</span> <span class="cmd">tstats</span> count where index=<span class="val">web</span> by host, status
+
+<span class="comment">-- ⑤ Möglichst kurzen Zeitraum wählen --</span>
+<span class="comment">   earliest=-7d  statt earliest=-30d</span>
+
+<span class="comment">-- ⑥ stats statt transaction verwenden --</span>
+<span class="op">|</span> <span class="cmd">stats</span> min(_time) as start by session  <span class="comment">-- ✓ schnell</span>
+<span class="comment">   | transaction session  -- ✗ langsam</span></div>
+  </div>
+
+  <!-- ══ REGEX ══ -->
+  <div class="card">
+    <h2 class="red"><span class="dot"></span>Reguläre Ausdrücke (rex)</h2>
+
+    <div class="label">Felder extrahieren</div>
+    <div class="snippet"><span class="comment">-- Einfache Extraktion --</span>
+<span class="op">|</span> <span class="cmd">rex</span> field=_raw <span class="str">"user=(?&lt;username&gt;\w+)"</span>
+
+<span class="comment">-- Mehrere Felder auf einmal --</span>
+<span class="op">|</span> <span class="cmd">rex</span> field=url <span class="str">"\/api\/(?&lt;version&gt;v\d+)\/(?&lt;endpoint&gt;\w+)"</span></div>
+
+    <div class="label">Mehrere Treffer pro Event (max_match)</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">rex</span> field=_raw max_match=<span class="val">0</span>
+    <span class="str">"error_code=(?&lt;codes&gt;\d+)"</span></div>
+
+    <div class="label">Häufige Regex-Patterns</div>
+    <div class="snippet"><span class="comment"># IP-Adresse:</span>
+  (?&lt;ip&gt;\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
+<span class="comment"># E-Mail:</span>
+  (?&lt;email&gt;[\w.+-]+@[\w-]+\.\w+)
+<span class="comment"># UUID:</span>
+  (?&lt;uuid&gt;[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})
+<span class="comment"># URL-Pfad:</span>
+  (?&lt;path&gt;\/[\w\/.-]+)
+<span class="comment"># Domain aus URL:</span>
+  (?&lt;domain&gt;(?:https?:\/\/)?([\w.-]+)\/)</div>
+  </div>
+
+  <!-- ══ TIPS & TRICKS ══ -->
+  <div class="card wide">
+    <h2 class="green"><span class="dot"></span>Tips &amp; Tricks</h2>
+
+    <div class="pipe-chain">
+      <div class="pipe-step">
+        <div class="step-label">Debugging</div>
+        <span style="color:var(--green)">fieldsummary</span>
+      </div>
+      <div class="pipe-arrow">|</div>
+      <div class="pipe-step">
+        <div class="step-label">Alerting</div>
+        <span style="color:var(--orange)">error_rate &gt; 5%</span>
+      </div>
+      <div class="pipe-arrow">|</div>
+      <div class="pipe-step">
+        <div class="step-label">Macro</div>
+        <span style="color:var(--accent2)">`get_errors(index)`</span>
+      </div>
+    </div>
+
+    <div class="label">Schnelle Feldübersicht</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">fieldsummary</span>                           <span class="comment">-- Alle Felder + Stats</span>
+<span class="op">|</span> <span class="cmd">top</span> limit=<span class="val">20</span> useragent                   <span class="comment">-- Häufigste Werte</span>
+<span class="op">|</span> <span class="cmd">highlight</span> error, warning, critical       <span class="comment">-- Keywords hervorheben</span></div>
+
+    <div class="label">Alerting – Error Rate überwachen</div>
+    <div class="snippet"><span class="idx">index=</span><span class="val">web</span>
+<span class="op">|</span> <span class="cmd">bin</span> _time span=<span class="val">5m</span>
+<span class="op">|</span> <span class="cmd">stats</span> count(eval(status&gt;=<span class="val">500</span>)) as errors,
+        count as total by _time
+<span class="op">|</span> <span class="cmd">eval</span> error_rate = round(errors/total*<span class="val">100</span>, <span class="val">2</span>)
+<span class="op">|</span> <span class="cmd">where</span> error_rate &gt; <span class="val">5</span></div>
+
+    <div class="label">Nützliche SPL-Idiome</div>
+    <div class="snippet"><span class="comment">-- Null-Werte ersetzen --</span>
+<span class="op">|</span> <span class="cmd">fillnull</span> value=<span class="str">"N/A"</span> username, email
+
+<span class="comment">-- Multivalue deduplizieren & joinen --</span>
+<span class="op">|</span> <span class="cmd">eval</span> users = mvjoin(mvdedup(user_list), <span class="str">", "</span>)
+
+<span class="comment">-- Bedingte Aggregation --</span>
+<span class="op">|</span> <span class="cmd">stats</span> count(eval(status=<span class="str">"success"</span>)) as successes,
+        count(eval(status=<span class="str">"failure"</span>)) as failures
+
+<span class="comment">-- dedup mit Sortierung (jüngsten Treffer behalten) --</span>
+<span class="op">|</span> <span class="cmd">sort</span> -_time <span class="op">|</span> <span class="cmd">dedup</span> src_ip
+
+<span class="comment">-- rename für verschachtelte Felder vor eval --</span>
+<span class="op">|</span> <span class="cmd">rename</span> signals.ip_address as ip_addr
+<span class="op">|</span> <span class="cmd">eval</span> ip_addr = <span class="cmd">if</span>(isnull(ip_addr), <span class="str">"unknown"</span>, ip_addr)</div>
+  </div>
+
+</div>
+
+<footer>
+  Splunk SPL Cheatsheet · CSIRT Edition · <strong style="color:var(--accent)">@BenjiTrapp</strong> · Stand: 2025 · <a href="https://benjitrapp.github.io/defenses/2022-08-25-Splunk-Cheatsheet/" style="color:var(--muted)">Quelle</a>
+</footer>
+
+</body>
+</html>
