@@ -133,11 +133,3 @@ BOSS of the SOC (BOTS) are blue-team CTF exercises created by Splunk. Each versi
 - **BOTSv3** (2018) — Multi-vector threat detection
 
 > 🕶️ `happy hunting!`
-
----
-
-<div align="center">
-
-**Built with** ☕️ &nbsp;based on [splunk-bots-docker](https://github.com/lexcilius/splunk-bots-docker)
-
-</div>
