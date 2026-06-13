@@ -435,6 +435,50 @@
 <span class="idx">index=</span><span class="val">network</span> <span class="kw">sourcetype=</span><span class="str">cisco:asa</span></div>
   </div>
 
+  <!-- ══ METADATA & DISCOVERY ══ -->
+  <div class="card">
+    <h2 class="purple"><span class="dot"></span>Metadata – Indizes &amp; Sourcetypes entdecken</h2>
+    <div class="callout">
+      <strong>Was ist <code style="color:var(--accent)">metadata</code>?</strong> Ein spezieller SPL-Befehl, der <em>nicht</em> Events durchsucht, sondern die <strong>Metadaten</strong> der Indizes abfragt – z.B. welche Sourcetypes, Hosts oder Sources existieren, wann zuletzt Daten kamen, und wie viele Events vorhanden sind. Extrem schnell, da keine Event-Daten gelesen werden.
+    </div>
+
+    <div class="label">Alle verfügbaren Indizes anzeigen</div>
+    <div class="snippet"><span class="comment">-- Methode 1: über metadata (empfohlen) --</span>
+<span class="op">|</span> <span class="cmd">metadata</span> type=indexes
+<span class="op">|</span> <span class="cmd">table</span> title, totalCount, recentTime
+
+<span class="comment">-- Methode 2: über eventcount --</span>
+<span class="op">|</span> <span class="cmd">eventcount</span> summarize=false index=*
+<span class="op">|</span> <span class="cmd">dedup</span> index
+<span class="op">|</span> <span class="cmd">table</span> index</div>
+
+    <div class="label">Alle Sourcetypes eines Index anzeigen</div>
+    <div class="snippet"><span class="comment">-- Methode 1: über metadata (schnell, kein Event-Scan) --</span>
+<span class="op">|</span> <span class="cmd">metadata</span> type=sourcetypes index=<span class="val">botsv1</span>
+
+<span class="comment">-- Methode 2: über stats (langsamer, liest Events) --</span>
+<span class="idx">index=</span><span class="val">botsv1</span> <span class="op">|</span> <span class="cmd">stats</span> count by sourcetype</div>
+
+    <div class="label">Alle Indizes mit ihren Sourcetypes (Gesamtübersicht)</div>
+    <div class="snippet"><span class="op">|</span> <span class="cmd">metadata</span> type=sourcetypes index=*
+<span class="op">|</span> <span class="cmd">eval</span> last_seen=strftime(recentTime, <span class="str">"%Y-%m-%d %H:%M:%S"</span>)
+<span class="op">|</span> <span class="cmd">table</span> index, sourcetype, totalCount, last_seen
+<span class="op">|</span> <span class="cmd">sort</span> index</div>
+
+    <div class="label">Metadata-Typen</div>
+    <table>
+      <tr><th>type=</th><th>Zeigt</th><th>Typischer Use Case</th></tr>
+      <tr><td><code>indexes</code></td><td class="desc">Alle Indizes</td><td class="desc">Welche Datenquellen existieren?</td></tr>
+      <tr><td><code>sourcetypes</code></td><td class="desc">Alle Sourcetypes</td><td class="desc">Welche Log-Formate sind vorhanden?</td></tr>
+      <tr><td><code>sources</code></td><td class="desc">Alle Source-Pfade</td><td class="desc">Woher kommen die Daten?</td></tr>
+      <tr><td><code>hosts</code></td><td class="desc">Alle Hosts</td><td class="desc">Welche Systeme liefern Logs?</td></tr>
+    </table>
+
+    <div class="callout tip" style="margin-top:10px">
+      <strong>Tipp:</strong> <code style="color:var(--green)">metadata</code> ist ideal, um sich in einer unbekannten Splunk-Umgebung schnell zurechtzufinden – z.B. bei BOTSv1/v2/v3 Datasets.
+    </div>
+  </div>
+
   <!-- ══ ZEITRAUM ══ -->
   <div class="card">
     <h2 class="yellow"><span class="dot"></span>Zeitraum &amp; Time Handling</h2>
